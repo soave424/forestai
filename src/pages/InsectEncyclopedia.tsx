@@ -265,11 +265,6 @@ const InsectEncyclopedia = () => {
                 <span className="text-5xl mb-4">🔍</span>
                 <p className="text-muted-foreground text-sm">왼쪽 목록에서 곤충을 선택하세요.</p>
               </div>
-            ) : detailLoading ? (
-              <div className="flex flex-col items-center justify-center py-16">
-                <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
-                <p className="text-sm text-muted-foreground">상세 정보를 불러오는 중...</p>
-              </div>
             ) : (
               <div className="animate-fade-in">
                 <div className="mb-6">
