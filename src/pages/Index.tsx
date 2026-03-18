@@ -13,6 +13,7 @@ import {
   Plus, Download, RotateCcw, User, CalendarDays, FileText,
   Search, ChevronLeft, ChevronRight, Loader2,
 } from "lucide-react";
+import { FooterLinks } from "@/components/FooterLinks";
 
 type Tab = "warehouse" | "chat" | "observation" | "encyclopedia";
 
@@ -97,6 +98,8 @@ const Index = () => {
       )}
       {tab === "observation" && <ObservationView />}
       {tab === "encyclopedia" && <EncyclopediaView />}
+
+      <FooterLinks />
     </div>
   );
 };
