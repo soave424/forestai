@@ -4,14 +4,27 @@ import { KnowledgeCard } from "@/components/KnowledgeCard";
 import { RegisterForm } from "@/components/RegisterForm";
 import { ChatView } from "@/components/ChatView";
 import { useInsectStore } from "@/hooks/useInsectStore";
-import { BookOpen, MessageCircle, Leaf, Sparkles, ClipboardList, Bug } from "lucide-react";
+import { BookOpen, MessageCircle, Leaf, Sparkles, ClipboardList, Bug, Filter } from "lucide-react";
 
 type Tab = "warehouse" | "chat";
 
 const Index = () => {
   const [tab, setTab] = useState<Tab>("warehouse");
+  const [filterQuery, setFilterQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"latest" | "name">("latest");
   const { insects, addInsect, selectedIds, toggleSelection, clearSelection, selectedInsects } =
     useInsectStore();
+
+  const filteredInsects = insects
+    .filter((i) => {
+      if (!filterQuery.trim()) return true;
+      const q = filterQuery.toLowerCase();
+      return i.name.toLowerCase().includes(q) || i.author.toLowerCase().includes(q);
+    })
+    .sort((a, b) => {
+      if (sortBy === "name") return a.name.localeCompare(b.name, "ko");
+      return b.createdAt.localeCompare(a.createdAt);
+    });
 
   return (
     <div className="min-h-screen bg-background">
@@ -67,56 +80,77 @@ const Index = () => {
 
       {/* Content */}
       {tab === "warehouse" ? (
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground tracking-tight mb-2">
-              곤충 지식 창고
-            </h1>
-            <p className="text-muted-foreground text-sm leading-relaxed prose-limit">
-              관찰 기록이 모여 생태 지도가 됩니다. 카드를 선택한 뒤 탐험가 채팅에서 AI와 함께 탐구하세요.
-            </p>
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          {/* Header + Register */}
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground tracking-tight mb-1">
+                곤충 지식 창고
+              </h1>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                관찰 기록이 모여 생태 지도가 됩니다. 카드를 선택한 뒤 탐험가 채팅에서 AI와 함께 탐구하세요.
+              </p>
+            </div>
+            <RegisterForm onSubmit={addInsect} />
           </div>
 
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* Grid */}
-            <div className="flex-1">
-              {selectedInsects.length > 0 && (
-                <div className="mb-4 flex items-center gap-3">
-                  <span className="text-sm text-muted-foreground">
-                    <strong className="text-primary font-tabular">{selectedInsects.length}</strong>개 선택됨
-                  </span>
-                  <button
-                    onClick={() => setTab("chat")}
-                    className="px-4 py-2 bg-primary text-primary-foreground text-xs font-bold rounded-full hover:bg-primary/90 active:scale-95 transition-all flex items-center gap-1"
-                  >
-                    <Sparkles className="w-3 h-3" />
-                    선택 지식으로 AI 분석
-                  </button>
-                  <button
-                    onClick={clearSelection}
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    선택 해제
-                  </button>
-                </div>
-              )}
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {insects.map((insect) => (
-                  <KnowledgeCard
-                    key={insect.id}
-                    insect={insect}
-                    selected={selectedIds.has(insect.id)}
-                    onToggle={() => toggleSelection(insect.id)}
-                  />
-                ))}
-              </div>
+          {/* Filter + Selection bar */}
+          <div className="flex flex-wrap items-center gap-3 mb-5">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <input
+                value={filterQuery}
+                onChange={(e) => setFilterQuery(e.target.value)}
+                placeholder="이름 또는 기록자로 검색..."
+                className="bg-input rounded-md px-3 py-1.5 text-sm text-foreground shadow-input outline-none focus:ring-2 focus:ring-ring/20 transition-all w-56"
+              />
             </div>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as "latest" | "name")}
+              className="bg-input rounded-md px-3 py-1.5 text-sm text-foreground shadow-input outline-none focus:ring-2 focus:ring-ring/20 transition-all"
+            >
+              <option value="latest">최신순</option>
+              <option value="name">이름순</option>
+            </select>
 
-            {/* Sidebar */}
-            <div className="w-full lg:w-72 shrink-0">
-              <RegisterForm onSubmit={addInsect} />
-            </div>
+            {selectedInsects.length > 0 && (
+              <div className="flex items-center gap-3 ml-auto">
+                <span className="text-sm text-muted-foreground">
+                  <strong className="text-primary font-tabular">{selectedInsects.length}</strong>개 선택됨
+                </span>
+                <button
+                  onClick={() => setTab("chat")}
+                  className="px-4 py-1.5 bg-primary text-primary-foreground text-xs font-bold rounded-full hover:bg-primary/90 active:scale-95 transition-all flex items-center gap-1"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  AI 분석
+                </button>
+                <button
+                  onClick={clearSelection}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  선택 해제
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Cards grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {filteredInsects.map((insect) => (
+              <KnowledgeCard
+                key={insect.id}
+                insect={insect}
+                selected={selectedIds.has(insect.id)}
+                onToggle={() => toggleSelection(insect.id)}
+              />
+            ))}
+            {filteredInsects.length === 0 && (
+              <p className="col-span-full text-center text-muted-foreground text-sm py-12">
+                검색 결과가 없습니다.
+              </p>
+            )}
           </div>
         </div>
       ) : (
