@@ -96,49 +96,32 @@ const InsectEncyclopedia = () => {
   };
 
   const fetchDetail = async (item: InsectItem) => {
-    if (!item.insctPilbkNo) {
-      toast.error("도감 번호가 없습니다.");
-      return;
-    }
     setSelected(item);
-    setDetail(null);
+    // Use search result data directly as detail (the detail API doesn't return extra info)
+    setDetail({
+      insctGnrlNm: item.insctGnrlNm,
+      insctSpecsScnm: item.insctSpecsScnm,
+      familyKorNm: item.familyKorNm,
+      familyNm: item.familyNm,
+      genusKorNm: item.genusKorNm,
+      genusNm: item.genusNm,
+    });
     setEasyMode(false);
     setSimplifiedText("");
-    setDetailLoading(true);
-
-    try {
-      const { data, error } = await supabase.functions.invoke("insect-search", {
-        body: { action: "detail", insctPilbkNo: item.insctPilbkNo },
-      });
-
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      const detailItem = data?.body?.items?.item;
-      const d: InsectDetail = Array.isArray(detailItem) ? detailItem[0] : detailItem || {};
-      setDetail(d);
-    } catch (e: any) {
-      console.error("Detail error:", e);
-      toast.error(e?.message || "상세 정보 조회 중 오류가 발생했습니다.");
-    } finally {
-      setDetailLoading(false);
-    }
   };
 
   const getDescriptionText = (): string => {
     if (!detail) return "";
     const parts: string[] = [];
-    if (detail.cont) parts.push(detail.cont);
-    if (detail.hbttInfo) parts.push(`서식지: ${detail.hbttInfo}`);
-    if (detail.dscInfo) parts.push(detail.dscInfo);
-    // Fallback: collect any long text fields
-    if (parts.length === 0) {
-      Object.entries(detail).forEach(([k, v]) => {
-        if (typeof v === "string" && v.length > 30 && !["imgUrl", "insctPilbkNo"].includes(k)) {
-          parts.push(v);
-        }
-      });
-    }
+    const name = detail.insctGnrlNm || "이 곤충";
+    const scientific = detail.insctSpecsScnm || "";
+    const family = detail.familyKorNm ? `${detail.familyKorNm} (${detail.familyNm || ""})` : "";
+    const genus = detail.genusKorNm ? `${detail.genusKorNm} (${detail.genusNm || ""})` : "";
+
+    parts.push(`${name}의 학명은 ${scientific}입니다.`);
+    if (family) parts.push(`과: ${family}`);
+    if (genus) parts.push(`속: ${genus}`);
+
     return parts.join("\n\n") || "상세 정보가 없습니다.";
   };
 
@@ -281,11 +264,6 @@ const InsectEncyclopedia = () => {
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <span className="text-5xl mb-4">🔍</span>
                 <p className="text-muted-foreground text-sm">왼쪽 목록에서 곤충을 선택하세요.</p>
-              </div>
-            ) : detailLoading ? (
-              <div className="flex flex-col items-center justify-center py-16">
-                <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
-                <p className="text-sm text-muted-foreground">상세 정보를 불러오는 중...</p>
               </div>
             ) : (
               <div className="animate-fade-in">
