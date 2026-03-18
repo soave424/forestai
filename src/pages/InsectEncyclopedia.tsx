@@ -325,11 +325,23 @@ const InsectEncyclopedia = () => {
                     </p>
                   )}
                   <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
+                    {detail?.ordKorNm && (
+                      <span className="bg-muted px-2 py-0.5 rounded">목: {detail.ordKorNm} ({detail.ordNm})</span>
+                    )}
                     {(detail?.familyKorNm || selected.familyKorNm) && (
-                      <span>과: {detail?.familyKorNm || selected.familyKorNm} ({detail?.familyNm || selected.familyNm})</span>
+                      <span className="bg-muted px-2 py-0.5 rounded">과: {detail?.familyKorNm || selected.familyKorNm} ({detail?.familyNm || selected.familyNm})</span>
+                    )}
+                    {detail?.subFamilyKorNm && (
+                      <span className="bg-muted px-2 py-0.5 rounded">아과: {detail.subFamilyKorNm} ({detail.subFamilyNm})</span>
                     )}
                     {(detail?.genusKorNm || selected.genusKorNm) && (
-                      <span>속: {detail?.genusKorNm || selected.genusKorNm} ({detail?.genusNm || selected.genusNm})</span>
+                      <span className="bg-muted px-2 py-0.5 rounded">속: {detail?.genusKorNm || selected.genusKorNm} ({detail?.genusNm || selected.genusNm})</span>
+                    )}
+                    {detail?.emrgcEraDscrt && (
+                      <span className="bg-muted px-2 py-0.5 rounded">출현시기: {detail.emrgcEraDscrt}월</span>
+                    )}
+                    {detail?.winterDsrct && (
+                      <span className="bg-muted px-2 py-0.5 rounded">월동형태: {detail.winterDsrct}</span>
                     )}
                   </div>
                 </div>
