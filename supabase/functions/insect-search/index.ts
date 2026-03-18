@@ -12,6 +12,9 @@ const BASE_URL = "https://apis.data.go.kr/1400119/InsectService";
 function parseXmlToJson(xml: string): any {
   // Remove XML declaration
   xml = xml.replace(/<\?xml[^?]*\?>\s*/g, "");
+  
+  // Expand self-closing tags: <tag/> → <tag></tag>
+  xml = xml.replace(/<(\w+)\s*\/>/g, "<$1></$1>");
 
   function parseNode(s: string): any {
     const obj: any = {};
@@ -24,7 +27,6 @@ function parseXmlToJson(xml: string): any {
       const key = match[1];
       const inner = match[2];
 
-      // Check if inner contains child tags
       if (/<\w+>/.test(inner)) {
         const val = parseNode(inner);
         if (obj[key] !== undefined) {
