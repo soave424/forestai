@@ -54,6 +54,13 @@ const Index = () => {
               <ClipboardList className="w-4 h-4" />
               관찰 기록장
             </Link>
+            <Link
+              to="/encyclopedia"
+              className="px-4 py-2 text-sm font-semibold flex items-center gap-1.5 border-b-[3px] border-transparent text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Bug className="w-4 h-4" />
+              곤충 도감
+            </Link>
           </div>
         </div>
       </nav>
