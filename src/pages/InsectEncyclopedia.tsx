@@ -109,39 +109,33 @@ const InsectEncyclopedia = () => {
   };
 
   const fetchDetail = async (item: InsectItem) => {
-    if (!item.insctPilbkNo) {
-      toast.error("도감 번호가 없습니다.");
-      return;
-    }
     setSelected(item);
-    setDetail(null);
+    setDetail({
+      insctGnrlNm: item.insctGnrlNm,
+      insctSpecsScnm: item.insctSpecsScnm,
+      familyKorNm: item.familyKorNm,
+      familyNm: item.familyNm,
+      genusKorNm: item.genusKorNm,
+      genusNm: item.genusNm,
+    });
     setEasyMode(false);
     setSimplifiedText("");
+    
+    // Auto-generate AI content
     setDetailLoading(true);
-
     try {
-      const { data, error } = await supabase.functions.invoke("insect-search", {
-        body: { action: "detail", insctPilbkNo: item.insctPilbkNo },
+      const { data, error } = await supabase.functions.invoke("simplify-text", {
+        body: {
+          text: `곤충 이름: ${item.insctGnrlNm || ""}\n학명: ${item.insctSpecsScnm || ""}\n과: ${item.familyKorNm || ""} (${item.familyNm || ""})\n속: ${item.genusKorNm || ""} (${item.genusNm || ""})`,
+          insectName: item.insctGnrlNm || "",
+          mode: "detail",
+        },
       });
-
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      const detailItem = data?.body?.items?.item;
-      const d: InsectDetail = Array.isArray(detailItem) ? detailItem[0] : detailItem || {};
-      setDetail(d);
-    } catch (e: any) {
-      console.error("Detail error:", e);
-      // Fallback to search data
-      setDetail({
-        insctGnrlNm: item.insctGnrlNm,
-        insctSpecsScnm: item.insctSpecsScnm,
-        familyKorNm: item.familyKorNm,
-        familyNm: item.familyNm,
-        genusKorNm: item.genusKorNm,
-        genusNm: item.genusNm,
-      });
-      toast.error("상세 정보를 불러오지 못했습니다. 기본 정보를 표시합니다.");
+      if (!error && data?.simplified) {
+        setSimplifiedText(data.simplified);
+      }
+    } catch (e) {
+      console.error("AI detail error:", e);
     } finally {
       setDetailLoading(false);
     }
@@ -149,22 +143,12 @@ const InsectEncyclopedia = () => {
 
   const getDescriptionText = (): string => {
     if (!detail) return "";
-    const sections: { label: string; text: string }[] = [];
-
-    if (detail.gnrlDsrct) sections.push({ label: "일반 특징", text: detail.gnrlDsrct });
-    if (detail.ecoDsrct) sections.push({ label: "생태 정보", text: detail.ecoDsrct });
-    if (detail.habitDsrct) sections.push({ label: "습성", text: detail.habitDsrct });
-    if (detail.femaleDsrct) sections.push({ label: "암컷 특징", text: detail.femaleDsrct });
-    if (detail.maleDsrct) sections.push({ label: "수컷 특징", text: detail.maleDsrct });
-    if (detail.larvaDsrct) sections.push({ label: "유충", text: detail.larvaDsrct });
-    if (detail.pupaDsrct) sections.push({ label: "번데기", text: detail.pupaDsrct });
-    if (detail.eggDsrct) sections.push({ label: "알", text: detail.eggDsrct });
-    if (detail.pestDsrct) sections.push({ label: "해충 정보", text: detail.pestDsrct });
-    if (detail.referDsrct) sections.push({ label: "참고", text: detail.referDsrct });
-
-    if (sections.length === 0) return "상세 정보가 없습니다.";
-
-    return sections.map(s => `【${s.label}】\n${s.text}`).join("\n\n");
+    const parts: string[] = [];
+    parts.push(`이름: ${detail.insctGnrlNm || "알 수 없음"}`);
+    if (detail.insctSpecsScnm) parts.push(`학명: ${detail.insctSpecsScnm}`);
+    if (detail.familyKorNm) parts.push(`과: ${detail.familyKorNm} (${detail.familyNm || ""})`);
+    if (detail.genusKorNm) parts.push(`속: ${detail.genusKorNm} (${detail.genusNm || ""})`);
+    return parts.join("\n") || "정보가 없습니다.";
   };
 
   const handleSimplify = async () => {
