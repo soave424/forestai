@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { KnowledgeCard } from "@/components/KnowledgeCard";
 import { RegisterForm } from "@/components/RegisterForm";
 import { ChatView } from "@/components/ChatView";
 import { useInsectStore } from "@/hooks/useInsectStore";
-import { BookOpen, MessageCircle, Leaf, Sparkles } from "lucide-react";
+import { BookOpen, MessageCircle, Leaf, Sparkles, ClipboardList } from "lucide-react";
 
 type Tab = "warehouse" | "chat";
 
