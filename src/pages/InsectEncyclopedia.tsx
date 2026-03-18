@@ -96,33 +96,18 @@ const InsectEncyclopedia = () => {
   };
 
   const fetchDetail = async (item: InsectItem) => {
-    if (!item.insctPilbkNo) {
-      toast.error("도감 번호가 없습니다.");
-      return;
-    }
     setSelected(item);
-    setDetail(null);
+    // Use search result data directly as detail (the detail API doesn't return extra info)
+    setDetail({
+      insctGnrlNm: item.insctGnrlNm,
+      insctSpecsScnm: item.insctSpecsScnm,
+      familyKorNm: item.familyKorNm,
+      familyNm: item.familyNm,
+      genusKorNm: item.genusKorNm,
+      genusNm: item.genusNm,
+    });
     setEasyMode(false);
     setSimplifiedText("");
-    setDetailLoading(true);
-
-    try {
-      const { data, error } = await supabase.functions.invoke("insect-search", {
-        body: { action: "detail", insctPilbkNo: item.insctPilbkNo },
-      });
-
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      const detailItem = data?.body?.items?.item;
-      const d: InsectDetail = Array.isArray(detailItem) ? detailItem[0] : detailItem || {};
-      setDetail(d);
-    } catch (e: any) {
-      console.error("Detail error:", e);
-      toast.error(e?.message || "상세 정보 조회 중 오류가 발생했습니다.");
-    } finally {
-      setDetailLoading(false);
-    }
   };
 
   const getDescriptionText = (): string => {
