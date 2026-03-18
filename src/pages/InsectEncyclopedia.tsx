@@ -16,12 +16,27 @@ import {
 } from "lucide-react";
 
 interface InsectItem {
-  spe_kname?: string;
-  spe_sname?: string;
-  fam_kname?: string;
-  ord_kname?: string;
+  familyKorNm?: string;
+  familyNm?: string;
+  genusKorNm?: string;
+  genusNm?: string;
+  insctGnrlNm?: string;
+  insctPilbkNo?: string;
+  insctSpecsScnm?: string;
+  lastUpdtDtm?: string;
+}
+
+interface InsectDetail {
+  insctGnrlNm?: string;
+  insctSpecsScnm?: string;
+  familyKorNm?: string;
+  familyNm?: string;
+  genusKorNm?: string;
+  genusNm?: string;
+  imgUrl?: string;
   cont?: string;
-  img_url?: string;
+  hbttInfo?: string;
+  dscInfo?: string;
   [key: string]: any;
 }
 
@@ -29,9 +44,11 @@ const InsectEncyclopedia = () => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<InsectItem[]>([]);
   const [selected, setSelected] = useState<InsectItem | null>(null);
+  const [detail, setDetail] = useState<InsectDetail | null>(null);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [easyMode, setEasyMode] = useState(false);
   const [simplifiedText, setSimplifiedText] = useState("");
   const [simplifying, setSimplifying] = useState(false);
@@ -45,25 +62,29 @@ const InsectEncyclopedia = () => {
     }
     setLoading(true);
     setSelected(null);
+    setDetail(null);
     setEasyMode(false);
     setSimplifiedText("");
 
     try {
       const { data, error } = await supabase.functions.invoke("insect-search", {
-        body: { query: query.trim(), pageNo, numOfRows },
+        body: { query: query.trim(), pageNo: String(pageNo), numOfRows: String(numOfRows) },
       });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
-      // Parse response - structure depends on public data API
-      const items = data?.response?.body?.items || data?.body?.items || data?.items || [];
-      const total = data?.response?.body?.totalCount || data?.body?.totalCount || data?.totalCount || 0;
+      const body = data?.body;
+      const items = body?.items?.item;
+      const total = Number(body?.totalCount || 0);
 
-      setResults(Array.isArray(items) ? items : items?.item ? [].concat(items.item) : []);
-      setTotalCount(Number(total));
+      const list: InsectItem[] = !items ? [] : Array.isArray(items) ? items : [items];
+
+      setResults(list);
+      setTotalCount(total);
       setPage(pageNo);
 
-      if ((Array.isArray(items) ? items : []).length === 0 && !items?.item) {
+      if (list.length === 0) {
         toast.info("검색 결과가 없습니다.");
       }
     } catch (e: any) {
@@ -74,14 +95,66 @@ const InsectEncyclopedia = () => {
     }
   };
 
-  const handleSimplify = async (insect: InsectItem) => {
-    const text = insect.cont || insect.dsc_cont || "정보가 없습니다.";
+  const fetchDetail = async (item: InsectItem) => {
+    if (!item.insctPilbkNo) {
+      toast.error("도감 번호가 없습니다.");
+      return;
+    }
+    setSelected(item);
+    setDetail(null);
+    setEasyMode(false);
+    setSimplifiedText("");
+    setDetailLoading(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("insect-search", {
+        body: { action: "detail", insctPilbkNo: item.insctPilbkNo },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const detailItem = data?.body?.items?.item;
+      const d: InsectDetail = Array.isArray(detailItem) ? detailItem[0] : detailItem || {};
+      setDetail(d);
+    } catch (e: any) {
+      console.error("Detail error:", e);
+      toast.error(e?.message || "상세 정보 조회 중 오류가 발생했습니다.");
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const getDescriptionText = (): string => {
+    if (!detail) return "";
+    const parts: string[] = [];
+    if (detail.cont) parts.push(detail.cont);
+    if (detail.hbttInfo) parts.push(`서식지: ${detail.hbttInfo}`);
+    if (detail.dscInfo) parts.push(detail.dscInfo);
+    // Fallback: collect any long text fields
+    if (parts.length === 0) {
+      Object.entries(detail).forEach(([k, v]) => {
+        if (typeof v === "string" && v.length > 30 && !["imgUrl", "insctPilbkNo"].includes(k)) {
+          parts.push(v);
+        }
+      });
+    }
+    return parts.join("\n\n") || "상세 정보가 없습니다.";
+  };
+
+  const handleSimplify = async () => {
+    const text = getDescriptionText();
+    if (text === "상세 정보가 없습니다.") {
+      toast.info("변환할 설명이 없습니다.");
+      return;
+    }
     setSimplifying(true);
     try {
       const { data, error } = await supabase.functions.invoke("simplify-text", {
-        body: { text, insectName: insect.spe_kname || "" },
+        body: { text, insectName: selected?.insctGnrlNm || "" },
       });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       setSimplifiedText(data.simplified || "변환에 실패했습니다.");
       setEasyMode(true);
     } catch (e: any) {
@@ -96,7 +169,6 @@ const InsectEncyclopedia = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <nav className="sticky top-0 z-50 bg-card/80 backdrop-blur-md border-b border-border">
         <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-16">
           <div className="flex items-center gap-3">
@@ -123,38 +195,34 @@ const InsectEncyclopedia = () => {
         {/* Search */}
         <div className="bg-card rounded-xl border border-border p-6 shadow-sm mb-8">
           <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              searchInsects(1);
-            }}
-            className="flex gap-3"
+            onSubmit={(e) => { e.preventDefault(); searchInsects(1); }}
+            className="flex gap-3 items-end"
           >
             <div className="flex-1">
               <label className="label-caps block mb-1.5">곤충 국명 또는 학명 입력</label>
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="예: 장수풍뎅이, Allomyrina"
+                placeholder="예: 장수풍뎅이, 호랑나비"
                 className="w-full bg-input rounded-md px-3 py-2 text-sm text-foreground shadow-input outline-none focus:ring-2 focus:ring-ring/20 transition-all"
               />
             </div>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="self-end bg-primary text-primary-foreground hover:bg-primary/90"
-            >
+            <Button type="submit" disabled={loading} className="bg-primary text-primary-foreground hover:bg-primary/90">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
               <span className="ml-1">검색</span>
             </Button>
           </form>
         </div>
 
-        {/* Content: List + Detail */}
+        {/* Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* List */}
           <div className="lg:col-span-1 bg-card rounded-xl border border-border p-5 shadow-sm">
             <h2 className="text-base font-bold text-foreground mb-4 flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-primary" /> 목록
+              {totalCount > 0 && (
+                <span className="text-xs font-normal text-muted-foreground">({totalCount}건)</span>
+              )}
             </h2>
 
             {loading ? (
@@ -167,54 +235,38 @@ const InsectEncyclopedia = () => {
               </p>
             ) : (
               <>
-                <div className="space-y-2 mb-4">
+                <div className="space-y-1.5 mb-4">
                   {results.map((item, i) => (
                     <button
-                      key={i}
-                      onClick={() => {
-                        setSelected(item);
-                        setEasyMode(false);
-                        setSimplifiedText("");
-                      }}
+                      key={item.insctPilbkNo || i}
+                      onClick={() => fetchDetail(item)}
                       className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                        selected === item
+                        selected?.insctPilbkNo === item.insctPilbkNo
                           ? "bg-primary/10 text-primary font-semibold border border-primary/20"
                           : "hover:bg-muted text-foreground"
                       }`}
                     >
                       <div className="font-medium flex items-center gap-1.5">
                         <Bug className="w-3.5 h-3.5 text-primary shrink-0" />
-                        {item.spe_kname || "이름 없음"}
+                        {item.insctGnrlNm || "이름 없음"}
                       </div>
-                      {item.spe_sname && (
-                        <div className="text-xs text-muted-foreground italic ml-5">
-                          {item.spe_sname}
-                        </div>
+                      {item.insctSpecsScnm && (
+                        <div className="text-xs text-muted-foreground italic ml-5">{item.insctSpecsScnm}</div>
+                      )}
+                      {item.familyKorNm && (
+                        <div className="text-xs text-muted-foreground ml-5">{item.familyKorNm}</div>
                       )}
                     </button>
                   ))}
                 </div>
 
-                {/* Pagination */}
                 {totalPages > 1 && (
                   <div className="flex items-center justify-between">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page <= 1}
-                      onClick={() => searchInsects(page - 1)}
-                    >
+                    <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => searchInsects(page - 1)}>
                       <ChevronLeft className="w-4 h-4" /> 이전
                     </Button>
-                    <span className="text-xs text-muted-foreground">
-                      {page} / {totalPages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page >= totalPages}
-                      onClick={() => searchInsects(page + 1)}
-                    >
+                    <span className="text-xs text-muted-foreground">{page} / {totalPages}</span>
+                    <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => searchInsects(page + 1)}>
                       다음 <ChevronRight className="w-4 h-4" />
                     </Button>
                   </div>
@@ -224,27 +276,36 @@ const InsectEncyclopedia = () => {
           </div>
 
           {/* Detail */}
-          <div className="lg:col-span-2 bg-card rounded-xl border border-border p-6 shadow-sm">
+          <div className="lg:col-span-2 bg-card rounded-xl border border-border p-6 shadow-sm min-h-[400px]">
             {!selected ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <span className="text-5xl mb-4">🔍</span>
                 <p className="text-muted-foreground text-sm">왼쪽 목록에서 곤충을 선택하세요.</p>
               </div>
+            ) : detailLoading ? (
+              <div className="flex flex-col items-center justify-center py-16">
+                <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
+                <p className="text-sm text-muted-foreground">상세 정보를 불러오는 중...</p>
+              </div>
             ) : (
               <div className="animate-fade-in">
-                <div className="flex items-start justify-between mb-6">
-                  <div>
-                    <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                      <Bug className="w-5 h-5 text-primary" />
-                      {selected.spe_kname || "이름 없음"}
-                    </h2>
-                    {selected.spe_sname && (
-                      <p className="text-sm text-muted-foreground italic mt-1">{selected.spe_sname}</p>
+                <div className="mb-6">
+                  <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                    <Bug className="w-5 h-5 text-primary" />
+                    {detail?.insctGnrlNm || selected.insctGnrlNm || "이름 없음"}
+                  </h2>
+                  {(detail?.insctSpecsScnm || selected.insctSpecsScnm) && (
+                    <p className="text-sm text-muted-foreground italic mt-1">
+                      {detail?.insctSpecsScnm || selected.insctSpecsScnm}
+                    </p>
+                  )}
+                  <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
+                    {(detail?.familyKorNm || selected.familyKorNm) && (
+                      <span>과: {detail?.familyKorNm || selected.familyKorNm} ({detail?.familyNm || selected.familyNm})</span>
                     )}
-                    <div className="flex gap-3 mt-2 text-xs text-muted-foreground">
-                      {selected.ord_kname && <span>목: {selected.ord_kname}</span>}
-                      {selected.fam_kname && <span>과: {selected.fam_kname}</span>}
-                    </div>
+                    {(detail?.genusKorNm || selected.genusKorNm) && (
+                      <span>속: {detail?.genusKorNm || selected.genusKorNm} ({detail?.genusNm || selected.genusNm})</span>
+                    )}
                   </div>
                 </div>
 
@@ -266,26 +327,22 @@ const InsectEncyclopedia = () => {
                       if (simplifiedText) {
                         setEasyMode(true);
                       } else {
-                        handleSimplify(selected);
+                        handleSimplify();
                       }
                     }}
                     className="flex items-center gap-1"
                   >
-                    {simplifying ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <Sparkles className="w-3.5 h-3.5" />
-                    )}
+                    {simplifying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
                     쉬운 말로 보기
                   </Button>
                 </div>
 
                 {/* Image */}
-                {selected.img_url && (
+                {detail?.imgUrl && (
                   <div className="mb-4 rounded-lg overflow-hidden border border-border">
                     <img
-                      src={selected.img_url}
-                      alt={selected.spe_kname || "곤충 이미지"}
+                      src={detail.imgUrl}
+                      alt={detail.insctGnrlNm || "곤충 이미지"}
                       className="w-full max-h-64 object-contain bg-muted"
                     />
                   </div>
@@ -301,7 +358,7 @@ const InsectEncyclopedia = () => {
                       <ReactMarkdown>{simplifiedText}</ReactMarkdown>
                     </div>
                   ) : (
-                    <p>{selected.cont || selected.dsc_cont || "상세 정보가 없습니다."}</p>
+                    <div className="whitespace-pre-wrap">{getDescriptionText()}</div>
                   )}
                 </div>
               </div>
