@@ -71,9 +71,45 @@ serve(async (req) => {
     let url: URL;
 
     if (action === "detail" && insctPilbkNo) {
+      // Try with both possible parameter names
       url = new URL(`${BASE_URL}/insectPilbkInfo`);
       url.searchParams.set("serviceKey", apiKey);
       url.searchParams.set("insctPilbkNo", insctPilbkNo);
+      url.searchParams.set("pageNo", "1");
+      url.searchParams.set("numOfRows", "1");
+      
+      console.log("Trying detail URL:", url.toString());
+      let resp = await fetch(url.toString());
+      let txt = await resp.text();
+      console.log("Detail raw (500 chars):", txt.slice(0, 500));
+      
+      // If body is empty/self-closing, try with insctGnrlNm search as fallback
+      if (txt.includes("<body/>") || txt.includes("<body />")) {
+        console.log("Detail empty, trying search by name fallback");
+        // Use search with the insect name passed from frontend
+        if (insctGnrlNm) {
+          url = new URL(`${BASE_URL}/insectPilbkSearch`);
+          url.searchParams.set("serviceKey", apiKey);
+          url.searchParams.set("pageNo", "1");
+          url.searchParams.set("numOfRows", "1");
+          url.searchParams.set("reqSearchWrd", insctGnrlNm);
+        }
+      } else {
+        // Detail returned data, return it directly
+        let data;
+        try { data = JSON.parse(txt); } catch {
+          const parsed = parseXmlToJson(txt);
+          data = parsed?.response || parsed;
+          if (data?.body?.item && !data?.body?.items) {
+            const detailItem = data.body.item;
+            data.body.items = { item: Array.isArray(detailItem) ? detailItem : [detailItem] };
+            delete data.body.item;
+          }
+        }
+        return new Response(JSON.stringify(data), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     } else {
       url = new URL(`${BASE_URL}/insectPilbkSearch`);
       url.searchParams.set("serviceKey", apiKey);
