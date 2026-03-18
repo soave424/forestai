@@ -4,14 +4,27 @@ import { KnowledgeCard } from "@/components/KnowledgeCard";
 import { RegisterForm } from "@/components/RegisterForm";
 import { ChatView } from "@/components/ChatView";
 import { useInsectStore } from "@/hooks/useInsectStore";
-import { BookOpen, MessageCircle, Leaf, Sparkles, ClipboardList, Bug } from "lucide-react";
+import { BookOpen, MessageCircle, Leaf, Sparkles, ClipboardList, Bug, Filter } from "lucide-react";
 
 type Tab = "warehouse" | "chat";
 
 const Index = () => {
   const [tab, setTab] = useState<Tab>("warehouse");
+  const [filterQuery, setFilterQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"latest" | "name">("latest");
   const { insects, addInsect, selectedIds, toggleSelection, clearSelection, selectedInsects } =
     useInsectStore();
+
+  const filteredInsects = insects
+    .filter((i) => {
+      if (!filterQuery.trim()) return true;
+      const q = filterQuery.toLowerCase();
+      return i.name.toLowerCase().includes(q) || i.author.toLowerCase().includes(q);
+    })
+    .sort((a, b) => {
+      if (sortBy === "name") return a.name.localeCompare(b.name, "ko");
+      return b.createdAt.localeCompare(a.createdAt);
+    });
 
   return (
     <div className="min-h-screen bg-background">
