@@ -79,13 +79,10 @@ export function FooterLinks() {
   return (
     <footer className="border-t border-border bg-card/50 mt-auto">
       <div className="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
-        <a
-          href="mailto:edustg123@gmail.com"
-          className="flex items-center gap-1 hover:text-foreground transition-colors"
-        >
+        <span className="flex items-center gap-1">
           <Mail className="w-3.5 h-3.5" />
-          문의
-        </a>
+          문의: edustg123@gmail.com
+        </span>
         <span className="text-border">|</span>
         <PolicyDialog title="운영방침" content={TERMS_OF_SERVICE} icon={<FileText className="w-3.5 h-3.5" />} />
         <span className="text-border">|</span>
