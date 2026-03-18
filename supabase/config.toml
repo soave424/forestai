@@ -1,1 +1,7 @@
 project_id = "phmlpbyivxccjycfepby"
+
+[functions.insect-search]
+verify_jwt = false
+
+[functions.simplify-text]
+verify_jwt = false
