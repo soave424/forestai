@@ -98,6 +98,8 @@ const Index = () => {
       )}
       {tab === "observation" && <ObservationView />}
       {tab === "encyclopedia" && <EncyclopediaView />}
+
+      <FooterLinks />
     </div>
   );
 };
