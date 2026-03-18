@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Mail, FileText, Shield } from "lucide-react";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
-} from "@/components/ui/dialog";
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from
+"@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const TERMS_OF_SERVICE = `# 운영방침 (이용약관)
@@ -111,13 +111,13 @@ export function FooterLinks() {
         <span className="text-border">|</span>
         <PolicyDialog title="개인정보처리방침" content={PRIVACY_POLICY} icon={<Shield className="w-3.5 h-3.5" />} />
         <span className="text-border">|</span>
-        <span>© 2025 숲속 곤충 도서관</span>
+        <span>© 2026 숲속 곤충 도서관</span>
       </div>
-    </footer>
-  );
+    </footer>);
+
 }
 
-function PolicyDialog({ title, content, icon }: { title: string; content: string; icon: React.ReactNode }) {
+function PolicyDialog({ title, content, icon }: {title: string;content: string;icon: React.ReactNode;}) {
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -148,6 +148,6 @@ function PolicyDialog({ title, content, icon }: { title: string; content: string
           </div>
         </ScrollArea>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>);
+
 }
