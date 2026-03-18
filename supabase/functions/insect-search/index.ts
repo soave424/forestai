@@ -58,7 +58,7 @@ serve(async (req) => {
   }
 
   try {
-    const { action, query, pageNo = "1", numOfRows = "10", insctPilbkNo } = await req.json();
+    const { action, query, pageNo = "1", numOfRows = "10", insctPilbkNo, insctGnrlNm } = await req.json();
 
     const apiKey = Deno.env.get("PUBLIC_DATA_API_KEY");
     if (!apiKey) {
