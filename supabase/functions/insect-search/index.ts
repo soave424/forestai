@@ -86,6 +86,7 @@ serve(async (req) => {
 
     const response = await fetch(url.toString());
     const text = await response.text();
+    console.log("Raw response (first 1000 chars):", text.slice(0, 1000));
 
     let data;
     try {
