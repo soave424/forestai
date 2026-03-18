@@ -33,23 +33,6 @@ interface InsectDetail {
   familyNm?: string;
   genusKorNm?: string;
   genusNm?: string;
-  ordKorNm?: string;
-  ordNm?: string;
-  subFamilyKorNm?: string;
-  subFamilyNm?: string;
-  ecoDsrct?: string;
-  gnrlDsrct?: string;
-  habitDsrct?: string;
-  femaleDsrct?: string;
-  maleDsrct?: string;
-  larvaDsrct?: string;
-  pupaDsrct?: string;
-  eggDsrct?: string;
-  winterDsrct?: string;
-  emrgcEraDscrt?: string;
-  pestDsrct?: string;
-  referDsrct?: string;
-  imgUrl?: string;
   [key: string]: any;
 }
 
@@ -62,9 +45,7 @@ const InsectEncyclopedia = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [easyMode, setEasyMode] = useState(false);
   const [simplifiedText, setSimplifiedText] = useState("");
-  const [simplifying, setSimplifying] = useState(false);
 
   const numOfRows = 10;
 
@@ -76,7 +57,6 @@ const InsectEncyclopedia = () => {
     setLoading(true);
     setSelected(null);
     setDetail(null);
-    setEasyMode(false);
     setSimplifiedText("");
 
     try {
@@ -118,11 +98,9 @@ const InsectEncyclopedia = () => {
       genusKorNm: item.genusKorNm,
       genusNm: item.genusNm,
     });
-    setEasyMode(false);
     setSimplifiedText("");
-    
-    // Auto-generate AI content
     setDetailLoading(true);
+
     try {
       const { data, error } = await supabase.functions.invoke("simplify-text", {
         body: {
@@ -149,29 +127,6 @@ const InsectEncyclopedia = () => {
     if (detail.familyKorNm) parts.push(`과: ${detail.familyKorNm} (${detail.familyNm || ""})`);
     if (detail.genusKorNm) parts.push(`속: ${detail.genusKorNm} (${detail.genusNm || ""})`);
     return parts.join("\n") || "정보가 없습니다.";
-  };
-
-  const handleSimplify = async () => {
-    const text = getDescriptionText();
-    if (text === "상세 정보가 없습니다.") {
-      toast.info("변환할 설명이 없습니다.");
-      return;
-    }
-    setSimplifying(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("simplify-text", {
-        body: { text, insectName: selected?.insctGnrlNm || "" },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      setSimplifiedText(data.simplified || "변환에 실패했습니다.");
-      setEasyMode(true);
-    } catch (e: any) {
-      console.error("Simplify error:", e);
-      toast.error(e?.message || "쉬운 말 변환 중 오류가 발생했습니다.");
-    } finally {
-      setSimplifying(false);
-    }
   };
 
   const totalPages = Math.ceil(totalCount / numOfRows);
@@ -294,7 +249,7 @@ const InsectEncyclopedia = () => {
             ) : detailLoading ? (
               <div className="flex flex-col items-center justify-center py-16">
                 <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
-                <p className="text-sm text-muted-foreground">상세 정보를 불러오는 중...</p>
+                <p className="text-sm text-muted-foreground">AI가 곤충 정보를 준비하고 있어요... 🐛</p>
               </div>
             ) : (
               <div className="animate-fade-in">
@@ -308,73 +263,22 @@ const InsectEncyclopedia = () => {
                       {detail?.insctSpecsScnm || selected.insctSpecsScnm}
                     </p>
                   )}
-                  <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
-                    {detail?.ordKorNm && (
-                      <span className="bg-muted px-2 py-0.5 rounded">목: {detail.ordKorNm} ({detail.ordNm})</span>
-                    )}
+                  <div className="flex flex-wrap gap-2 mt-3 text-xs text-muted-foreground">
                     {(detail?.familyKorNm || selected.familyKorNm) && (
-                      <span className="bg-muted px-2 py-0.5 rounded">과: {detail?.familyKorNm || selected.familyKorNm} ({detail?.familyNm || selected.familyNm})</span>
-                    )}
-                    {detail?.subFamilyKorNm && (
-                      <span className="bg-muted px-2 py-0.5 rounded">아과: {detail.subFamilyKorNm} ({detail.subFamilyNm})</span>
+                      <span className="bg-muted px-2 py-0.5 rounded">과: {detail?.familyKorNm || selected.familyKorNm}</span>
                     )}
                     {(detail?.genusKorNm || selected.genusKorNm) && (
-                      <span className="bg-muted px-2 py-0.5 rounded">속: {detail?.genusKorNm || selected.genusKorNm} ({detail?.genusNm || selected.genusNm})</span>
-                    )}
-                    {detail?.emrgcEraDscrt && (
-                      <span className="bg-muted px-2 py-0.5 rounded">출현시기: {detail.emrgcEraDscrt}월</span>
-                    )}
-                    {detail?.winterDsrct && (
-                      <span className="bg-muted px-2 py-0.5 rounded">월동형태: {detail.winterDsrct}</span>
+                      <span className="bg-muted px-2 py-0.5 rounded">속: {detail?.genusKorNm || selected.genusKorNm}</span>
                     )}
                   </div>
                 </div>
-
-                {/* Mode toggle */}
-                <div className="flex gap-2 mb-4">
-                  <Button
-                    variant={!easyMode ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setEasyMode(false)}
-                    className="flex items-center gap-1"
-                  >
-                    <BookOpen className="w-3.5 h-3.5" /> 원문 보기
-                  </Button>
-                  <Button
-                    variant={easyMode ? "default" : "outline"}
-                    size="sm"
-                    disabled={simplifying}
-                    onClick={() => {
-                      if (simplifiedText) {
-                        setEasyMode(true);
-                      } else {
-                        handleSimplify();
-                      }
-                    }}
-                    className="flex items-center gap-1"
-                  >
-                    {simplifying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                    쉬운 말로 보기
-                  </Button>
-                </div>
-
-                {/* Image */}
-                {detail?.imgUrl && (
-                  <div className="mb-4 rounded-lg overflow-hidden border border-border">
-                    <img
-                      src={detail.imgUrl}
-                      alt={detail.insctGnrlNm || "곤충 이미지"}
-                      className="w-full max-h-64 object-contain bg-muted"
-                    />
-                  </div>
-                )}
 
                 {/* Content */}
                 <div className="prose prose-sm max-w-none text-foreground/90 leading-relaxed">
-                  {easyMode && simplifiedText ? (
-                    <div className="bg-accent/30 rounded-lg p-4 border border-accent">
-                      <div className="flex items-center gap-1.5 text-xs text-primary font-semibold mb-2">
-                        <Sparkles className="w-3.5 h-3.5" /> AI가 쉽게 풀어쓴 설명
+                  {simplifiedText ? (
+                    <div className="bg-accent/30 rounded-lg p-5 border border-accent">
+                      <div className="flex items-center gap-1.5 text-xs text-primary font-semibold mb-3">
+                        <Sparkles className="w-3.5 h-3.5" /> AI 곤충 백과
                       </div>
                       <ReactMarkdown>{simplifiedText}</ReactMarkdown>
                     </div>
