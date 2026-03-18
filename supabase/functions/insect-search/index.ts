@@ -8,12 +8,8 @@ const corsHeaders = {
 
 const BASE_URL = "https://apis.data.go.kr/1400119/InsectService";
 
-// Simple XML to JSON parser using regex (no external deps)
 function parseXmlToJson(xml: string): any {
-  // Remove XML declaration
   xml = xml.replace(/<\?xml[^?]*\?>\s*/g, "");
-  
-  // Expand self-closing tags: <tag/> → <tag></tag>
   xml = xml.replace(/<(\w+)\s*\/>/g, "<$1></$1>");
 
   function parseNode(s: string): any {
@@ -58,7 +54,7 @@ serve(async (req) => {
   }
 
   try {
-    const { action, query, pageNo = "1", numOfRows = "10", insctPilbkNo, insctGnrlNm } = await req.json();
+    const { query, pageNo = "1", numOfRows = "10" } = await req.json();
 
     const apiKey = Deno.env.get("PUBLIC_DATA_API_KEY");
     if (!apiKey) {
@@ -68,75 +64,27 @@ serve(async (req) => {
       );
     }
 
-    let url: URL;
-
-    if (action === "detail" && insctPilbkNo) {
-      // Try with both possible parameter names
-      url = new URL(`${BASE_URL}/insectPilbkInfo`);
-      url.searchParams.set("serviceKey", apiKey);
-      url.searchParams.set("insctPilbkNo", insctPilbkNo);
-      url.searchParams.set("pageNo", "1");
-      url.searchParams.set("numOfRows", "1");
-      
-      console.log("Trying detail URL:", url.toString());
-      let resp = await fetch(url.toString());
-      let txt = await resp.text();
-      console.log("Detail raw (500 chars):", txt.slice(0, 500));
-      
-      // If body is empty/self-closing, try with insctGnrlNm search as fallback
-      if (txt.includes("<body/>") || txt.includes("<body />")) {
-        console.log("Detail empty, trying search by name fallback");
-        // Use search with the insect name passed from frontend
-        if (insctGnrlNm) {
-          url = new URL(`${BASE_URL}/insectPilbkSearch`);
-          url.searchParams.set("serviceKey", apiKey);
-          url.searchParams.set("pageNo", "1");
-          url.searchParams.set("numOfRows", "1");
-          url.searchParams.set("reqSearchWrd", insctGnrlNm);
-        }
-      } else {
-        // Detail returned data, return it directly
-        let data;
-        try { data = JSON.parse(txt); } catch {
-          const parsed = parseXmlToJson(txt);
-          data = parsed?.response || parsed;
-          if (data?.body?.item && !data?.body?.items) {
-            const detailItem = data.body.item;
-            data.body.items = { item: Array.isArray(detailItem) ? detailItem : [detailItem] };
-            delete data.body.item;
-          }
-        }
-        return new Response(JSON.stringify(data), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    } else {
-      url = new URL(`${BASE_URL}/insectPilbkSearch`);
-      url.searchParams.set("serviceKey", apiKey);
-      url.searchParams.set("pageNo", String(pageNo));
-      url.searchParams.set("numOfRows", String(numOfRows));
-      if (query) {
-        url.searchParams.set("reqSearchWrd", query);
-      }
+    const url = new URL(`${BASE_URL}/insectPilbkSearch`);
+    url.searchParams.set("serviceKey", apiKey);
+    url.searchParams.set("pageNo", String(pageNo));
+    url.searchParams.set("numOfRows", String(numOfRows));
+    if (query) {
+      url.searchParams.set("reqSearchWrd", query);
     }
 
     console.log("Fetching:", url.toString());
 
     const response = await fetch(url.toString());
     const text = await response.text();
-    console.log("Raw response (first 1000 chars):", text.slice(0, 1000));
 
     let data;
     try {
       data = JSON.parse(text);
     } catch {
-      // Parse XML
       try {
         const parsed = parseXmlToJson(text);
-        // The root is <response> so parsed = { header: {...}, body: {...} }
         data = parsed?.response || parsed;
 
-        // Check for API error
         if (data?.header?.resultCode && data.header.resultCode !== "00") {
           return new Response(
             JSON.stringify({ error: data.header.resultMsg || `API 오류: ${data.header.resultCode}` }),
@@ -144,15 +92,8 @@ serve(async (req) => {
           );
         }
 
-        // Normalize: ensure items.item is always an array (search response)
         if (data?.body?.items?.item && !Array.isArray(data.body.items.item)) {
           data.body.items.item = [data.body.items.item];
-        }
-        // Detail response: body.item directly (no items wrapper)
-        if (data?.body?.item && !data?.body?.items) {
-          const detailItem = data.body.item;
-          data.body.items = { item: Array.isArray(detailItem) ? detailItem : [detailItem] };
-          delete data.body.item;
         }
       } catch (xmlErr) {
         console.error("Parse error:", xmlErr, "Raw:", text.slice(0, 300));
