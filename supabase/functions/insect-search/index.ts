@@ -74,8 +74,6 @@ serve(async (req) => {
       url = new URL(`${BASE_URL}/insectPilbkInfo`);
       url.searchParams.set("serviceKey", apiKey);
       url.searchParams.set("insctPilbkNo", insctPilbkNo);
-      url.searchParams.set("pageNo", "1");
-      url.searchParams.set("numOfRows", "1");
     } else {
       url = new URL(`${BASE_URL}/insectPilbkSearch`);
       url.searchParams.set("serviceKey", apiKey);
