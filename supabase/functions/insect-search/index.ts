@@ -108,9 +108,15 @@ serve(async (req) => {
           );
         }
 
-        // Normalize: ensure items.item is always an array
+        // Normalize: ensure items.item is always an array (search response)
         if (data?.body?.items?.item && !Array.isArray(data.body.items.item)) {
           data.body.items.item = [data.body.items.item];
+        }
+        // Detail response: body.item directly (no items wrapper)
+        if (data?.body?.item && !data?.body?.items) {
+          const detailItem = data.body.item;
+          data.body.items = { item: Array.isArray(detailItem) ? detailItem : [detailItem] };
+          delete data.body.item;
         }
       } catch (xmlErr) {
         console.error("Parse error:", xmlErr, "Raw:", text.slice(0, 300));
