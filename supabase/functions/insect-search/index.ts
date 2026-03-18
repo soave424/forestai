@@ -68,19 +68,15 @@ serve(async (req) => {
       );
     }
 
-    let url: URL;
+    let fetchUrl: string;
 
     if (action === "detail" && insctPilbkNo) {
-      url = new URL(`${BASE_URL}/insectPilbkInfo`);
-      url.searchParams.set("serviceKey", apiKey);
-      url.searchParams.set("insctPilbkNo", insctPilbkNo);
+      // Use raw string concatenation to avoid double-encoding the service key
+      fetchUrl = `${BASE_URL}/insectPilbkInfo?serviceKey=${apiKey}&insctPilbkNo=${encodeURIComponent(insctPilbkNo)}`;
     } else {
-      url = new URL(`${BASE_URL}/insectPilbkSearch`);
-      url.searchParams.set("serviceKey", apiKey);
-      url.searchParams.set("pageNo", String(pageNo));
-      url.searchParams.set("numOfRows", String(numOfRows));
+      fetchUrl = `${BASE_URL}/insectPilbkSearch?serviceKey=${apiKey}&pageNo=${encodeURIComponent(String(pageNo))}&numOfRows=${encodeURIComponent(String(numOfRows))}`;
       if (query) {
-        url.searchParams.set("reqSearchWrd", query);
+        fetchUrl += `&reqSearchWrd=${encodeURIComponent(query)}`;
       }
     }
 
