@@ -33,10 +33,23 @@ interface InsectDetail {
   familyNm?: string;
   genusKorNm?: string;
   genusNm?: string;
+  ordKorNm?: string;
+  ordNm?: string;
+  subFamilyKorNm?: string;
+  subFamilyNm?: string;
+  ecoDsrct?: string;
+  gnrlDsrct?: string;
+  habitDsrct?: string;
+  femaleDsrct?: string;
+  maleDsrct?: string;
+  larvaDsrct?: string;
+  pupaDsrct?: string;
+  eggDsrct?: string;
+  winterDsrct?: string;
+  emrgcEraDscrt?: string;
+  pestDsrct?: string;
+  referDsrct?: string;
   imgUrl?: string;
-  cont?: string;
-  hbttInfo?: string;
-  dscInfo?: string;
   [key: string]: any;
 }
 
