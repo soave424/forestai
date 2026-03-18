@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,24 +8,46 @@ const corsHeaders = {
 
 const BASE_URL = "https://apis.data.go.kr/1400119/InsectService";
 
-function xmlToJson(node: any): any {
-  if (!node) return null;
-  const children = node.children;
-  if (!children || children.length === 0) {
-    return node.textContent?.trim() || "";
-  }
-  const obj: any = {};
-  for (const child of children) {
-    const key = child.tagName;
-    const val = xmlToJson(child);
-    if (obj[key] !== undefined) {
-      if (!Array.isArray(obj[key])) obj[key] = [obj[key]];
-      obj[key].push(val);
-    } else {
-      obj[key] = val;
+// Simple XML to JSON parser using regex (no external deps)
+function parseXmlToJson(xml: string): any {
+  // Remove XML declaration
+  xml = xml.replace(/<\?xml[^?]*\?>\s*/g, "");
+
+  function parseNode(s: string): any {
+    const obj: any = {};
+    const tagRegex = /<(\w+)>([\s\S]*?)<\/\1>/g;
+    let match;
+    let found = false;
+
+    while ((match = tagRegex.exec(s)) !== null) {
+      found = true;
+      const key = match[1];
+      const inner = match[2];
+
+      // Check if inner contains child tags
+      if (/<\w+>/.test(inner)) {
+        const val = parseNode(inner);
+        if (obj[key] !== undefined) {
+          if (!Array.isArray(obj[key])) obj[key] = [obj[key]];
+          obj[key].push(val);
+        } else {
+          obj[key] = val;
+        }
+      } else {
+        const text = inner.trim();
+        if (obj[key] !== undefined) {
+          if (!Array.isArray(obj[key])) obj[key] = [obj[key]];
+          obj[key].push(text);
+        } else {
+          obj[key] = text;
+        }
+      }
     }
+
+    return found ? obj : s.trim();
   }
-  return obj;
+
+  return parseNode(xml);
 }
 
 serve(async (req) => {
@@ -70,27 +91,26 @@ serve(async (req) => {
     try {
       data = JSON.parse(text);
     } catch {
-      // Parse XML response
+      // Parse XML
       try {
-        const doc = new DOMParser().parseFromString(text, "text/xml");
-        if (doc) {
-          data = xmlToJson(doc.documentElement);
-          // Check for API error
-          if (data?.header?.resultCode && data.header.resultCode !== "00") {
-            return new Response(
-              JSON.stringify({ error: data.header.resultMsg || `API 오류: ${data.header.resultCode}` }),
-              { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            );
-          }
-          // Normalize items.item to always be an array
-          if (data?.body?.items?.item && !Array.isArray(data.body.items.item)) {
-            data.body.items.item = [data.body.items.item];
-          }
-        } else {
-          throw new Error("XML parse failed");
+        const parsed = parseXmlToJson(text);
+        // The root is <response> so parsed = { header: {...}, body: {...} }
+        data = parsed?.response || parsed;
+
+        // Check for API error
+        if (data?.header?.resultCode && data.header.resultCode !== "00") {
+          return new Response(
+            JSON.stringify({ error: data.header.resultMsg || `API 오류: ${data.header.resultCode}` }),
+            { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Normalize: ensure items.item is always an array
+        if (data?.body?.items?.item && !Array.isArray(data.body.items.item)) {
+          data.body.items.item = [data.body.items.item];
         }
       } catch (xmlErr) {
-        console.error("XML parse error:", xmlErr, "Raw:", text.slice(0, 500));
+        console.error("Parse error:", xmlErr, "Raw:", text.slice(0, 300));
         return new Response(
           JSON.stringify({ error: "공공데이터 API에서 유효하지 않은 응답을 받았습니다." }),
           { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
