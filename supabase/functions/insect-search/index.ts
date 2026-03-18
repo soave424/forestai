@@ -80,9 +80,9 @@ serve(async (req) => {
       }
     }
 
-    console.log("Fetching:", url.toString());
+    console.log("Fetching:", fetchUrl);
 
-    const response = await fetch(url.toString());
+    const response = await fetch(fetchUrl);
     const text = await response.text();
     console.log("Raw response (first 1000 chars):", text.slice(0, 1000));
 
