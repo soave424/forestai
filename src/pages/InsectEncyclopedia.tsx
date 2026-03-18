@@ -113,17 +113,15 @@ const InsectEncyclopedia = () => {
   const getDescriptionText = (): string => {
     if (!detail) return "";
     const parts: string[] = [];
-    if (detail.cont) parts.push(detail.cont);
-    if (detail.hbttInfo) parts.push(`서식지: ${detail.hbttInfo}`);
-    if (detail.dscInfo) parts.push(detail.dscInfo);
-    // Fallback: collect any long text fields
-    if (parts.length === 0) {
-      Object.entries(detail).forEach(([k, v]) => {
-        if (typeof v === "string" && v.length > 30 && !["imgUrl", "insctPilbkNo"].includes(k)) {
-          parts.push(v);
-        }
-      });
-    }
+    const name = detail.insctGnrlNm || "이 곤충";
+    const scientific = detail.insctSpecsScnm || "";
+    const family = detail.familyKorNm ? `${detail.familyKorNm} (${detail.familyNm || ""})` : "";
+    const genus = detail.genusKorNm ? `${detail.genusKorNm} (${detail.genusNm || ""})` : "";
+
+    parts.push(`${name}의 학명은 ${scientific}입니다.`);
+    if (family) parts.push(`과: ${family}`);
+    if (genus) parts.push(`속: ${genus}`);
+
     return parts.join("\n\n") || "상세 정보가 없습니다.";
   };
 
