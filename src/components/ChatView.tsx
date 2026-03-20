@@ -79,7 +79,7 @@ export function ChatView({ selectedInsects, onClearSelection }: ChatViewProps) {
   };
 
   return (
-    <div className="flex h-[calc(100vh-64px)]">
+    <div className="flex h-[calc(100vh-64px)] max-h-[calc(100vh-64px)]">
       {/* Main Chat */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
