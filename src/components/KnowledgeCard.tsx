@@ -18,10 +18,7 @@ export function KnowledgeCard({ insect, selected, onToggle }: KnowledgeCardProps
       }`}
       onClick={onToggle}
     >
-      <div className="flex justify-between items-start mb-3">
-        <span className="label-caps text-[10px] text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-          Taxonomy
-        </span>
+      <div className="flex justify-end mb-3">
         <div
           className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
             selected
