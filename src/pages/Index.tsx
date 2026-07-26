@@ -18,8 +18,18 @@ import { FooterLinks } from "@/components/FooterLinks";
 
 type Tab = "warehouse" | "chat" | "observation" | "encyclopedia";
 
+const pathToTab = (p: string): Tab => {
+  if (p.startsWith("/chat")) return "chat";
+  if (p.startsWith("/observation")) return "observation";
+  if (p.startsWith("/encyclopedia")) return "encyclopedia";
+  return "warehouse";
+};
+
 const Index = () => {
-  const [tab, setTab] = useState<Tab>("warehouse");
+  const location = useLocation();
+  const navigate = useNavigate();
+  const tab = pathToTab(location.pathname);
+  const setTab = (t: Tab) => navigate(t === "warehouse" ? "/" : `/${t}`);
   const [filterQuery, setFilterQuery] = useState("");
   const [sortBy, setSortBy] = useState<"latest" | "name">("latest");
   const { insects, addInsect, selectedIds, toggleSelection, clearSelection, selectedInsects } =
