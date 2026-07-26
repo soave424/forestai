@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { KnowledgeCard } from "@/components/KnowledgeCard";
 import { RegisterForm } from "@/components/RegisterForm";
 import { ChatView } from "@/components/ChatView";
