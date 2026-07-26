@@ -29,7 +29,9 @@ const Index = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const tab = pathToTab(location.pathname);
-  const setTab = (t: Tab) => navigate(t === "warehouse" ? "/" : `/${t}`);
+  const embed = new URLSearchParams(location.search).get("embed") === "1";
+  const setTab = (t: Tab) =>
+    navigate((t === "warehouse" ? "/" : `/${t}`) + (embed ? "?embed=1" : ""));
   const [filterQuery, setFilterQuery] = useState("");
   const [sortBy, setSortBy] = useState<"latest" | "name">("latest");
   const { insects, addInsect, selectedIds, toggleSelection, clearSelection, selectedInsects } =
