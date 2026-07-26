@@ -114,7 +114,7 @@ const Index = () => {
       {tab === "observation" && <ObservationView />}
       {tab === "encyclopedia" && <EncyclopediaView />}
 
-      <FooterLinks />
+      {!embed && <FooterLinks />}
     </div>
   );
 };
