@@ -29,7 +29,9 @@ const Index = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const tab = pathToTab(location.pathname);
-  const setTab = (t: Tab) => navigate(t === "warehouse" ? "/" : `/${t}`);
+  const embed = new URLSearchParams(location.search).get("embed") === "1";
+  const setTab = (t: Tab) =>
+    navigate((t === "warehouse" ? "/" : `/${t}`) + (embed ? "?embed=1" : ""));
   const [filterQuery, setFilterQuery] = useState("");
   const [sortBy, setSortBy] = useState<"latest" | "name">("latest");
   const { insects, addInsect, selectedIds, toggleSelection, clearSelection, selectedInsects } =
@@ -56,37 +58,39 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Nav - always visible */}
-      <nav className="sticky top-0 z-50 bg-card/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
-          <div className="flex items-center gap-2">
-            <Leaf className="w-6 h-6 text-primary" />
-            <span className="font-bold text-lg text-foreground tracking-tight">
-              숲속 곤충 도서관
-            </span>
+      {!embed && (
+        <nav className="sticky top-0 z-50 bg-card/80 backdrop-blur-md border-b border-border">
+          <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
+            <div className="flex items-center gap-2">
+              <Leaf className="w-6 h-6 text-primary" />
+              <span className="font-bold text-lg text-foreground tracking-tight">
+                숲속 곤충 도서관
+              </span>
+            </div>
+            <div className="flex">
+              {tabs.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => setTab(id)}
+                  className={`px-4 py-2 text-sm font-semibold flex items-center gap-1.5 border-b-[3px] transition-colors ${
+                    tab === id
+                      ? "border-primary text-primary"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {label}
+                  {id === "chat" && selectedInsects.length > 0 && (
+                    <span className="ml-1 bg-primary text-primary-foreground text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                      {selectedInsects.length}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex">
-            {tabs.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                onClick={() => setTab(id)}
-                className={`px-4 py-2 text-sm font-semibold flex items-center gap-1.5 border-b-[3px] transition-colors ${
-                  tab === id
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {label}
-                {id === "chat" && selectedInsects.length > 0 && (
-                  <span className="ml-1 bg-primary text-primary-foreground text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                    {selectedInsects.length}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-      </nav>
+        </nav>
+      )}
 
       {/* Content */}
       {tab === "warehouse" && (
@@ -110,7 +114,7 @@ const Index = () => {
       {tab === "observation" && <ObservationView />}
       {tab === "encyclopedia" && <EncyclopediaView />}
 
-      <FooterLinks />
+      {!embed && <FooterLinks />}
     </div>
   );
 };
