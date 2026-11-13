@@ -111,7 +111,17 @@ const Index = () => {
       {tab === "chat" && (
         <ChatView selectedInsects={selectedInsects} onClearSelection={clearSelection} />
       )}
-      {tab === "observation" && <ObservationView />}
+      {tab === "observation" && (
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          <h1 className="sr-only">관찰 기록장</h1>
+          <iframe
+            src="https://service-2406.ai.studio"
+            title="관찰 기록장"
+            className="w-full h-[calc(100vh-140px)] min-h-[600px] rounded-xl border border-border bg-card shadow-sm"
+            allow="camera; microphone; clipboard-write"
+          />
+        </div>
+      )}
       {tab === "encyclopedia" && <EncyclopediaView />}
 
       {!embed && <FooterLinks />}
