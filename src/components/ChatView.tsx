@@ -90,7 +90,7 @@ export function ChatView({ selectedInsects, onClearSelection }: ChatViewProps) {
                 🧭
               </div>
               <div>
-                <p className="font-bold text-foreground">숲속 탐험가</p>
+                <h1 className="font-bold text-foreground text-base">숲속 탐험가 채팅</h1>
                 <p className="text-xs text-muted-foreground">Gemini AI Explorer</p>
               </div>
             </div>
@@ -173,6 +173,7 @@ export function ChatView({ selectedInsects, onClearSelection }: ChatViewProps) {
             className="flex gap-2"
           >
             <input
+              aria-label="탐험가에게 질문하기"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="곤충에 대해 궁금한 것을 물어보세요..."
@@ -194,10 +195,10 @@ export function ChatView({ selectedInsects, onClearSelection }: ChatViewProps) {
       {/* Sidebar */}
       <div className="hidden lg:block w-72 border-l border-border bg-card/50 p-4 overflow-y-auto custom-scrollbar">
         <div className="flex items-center justify-between mb-3">
-          <h4 className="font-bold text-sm text-foreground flex items-center gap-1">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1">
             <Database className="w-4 h-4 text-primary" />
             연동 데이터
-          </h4>
+          </h2>
           {selectedInsects.length > 0 && (
             <button
               onClick={onClearSelection}
@@ -227,10 +228,10 @@ export function ChatView({ selectedInsects, onClearSelection }: ChatViewProps) {
         )}
 
         <div className="mt-6">
-          <h4 className="font-bold text-sm text-foreground flex items-center gap-1 mb-2">
+          <h2 className="font-bold text-sm text-foreground flex items-center gap-1 mb-2">
             <Lightbulb className="w-4 h-4 text-accent" />
             탐구 팁
-          </h4>
+          </h2>
           <div className="space-y-2 text-xs text-muted-foreground leading-relaxed">
             <p>✔️ AI 답변 끝의 추천 질문을 클릭해 탐구를 심화하세요.</p>
             <p>✔️ 여러 곤충을 동시에 선택하면 비교 분석이 가능합니다.</p>

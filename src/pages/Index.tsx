@@ -140,6 +140,7 @@ function WarehouseView({
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-muted-foreground" />
           <input
+            aria-label="이름 또는 기록자로 검색"
             value={filterQuery}
             onChange={(e: any) => setFilterQuery(e.target.value)}
             placeholder="이름 또는 기록자로 검색..."
@@ -147,6 +148,7 @@ function WarehouseView({
           />
         </div>
         <select
+          aria-label="정렬 순서"
           value={sortBy}
           onChange={(e: any) => setSortBy(e.target.value)}
           className="bg-input rounded-md px-3 py-1.5 text-sm text-foreground shadow-input outline-none focus:ring-2 focus:ring-ring/20 transition-all"
@@ -223,16 +225,18 @@ function ObservationView() {
     <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
       {/* Add Record Form */}
       <section className="bg-card rounded-xl border border-border p-6 shadow-sm">
+        <h1 className="text-2xl font-bold text-foreground mb-1">관찰 기록장</h1>
         <h2 className="text-lg font-bold text-foreground mb-5 flex items-center gap-2">
           <Plus className="w-5 h-5 text-primary" /> 관찰 기록 추가
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="label-caps flex items-center gap-1.5 mb-1.5">
+              <label htmlFor="obs-observer" className="label-caps flex items-center gap-1.5 mb-1.5">
                 <User className="w-3.5 h-3.5" /> 관찰자
               </label>
               <input
+              id="obs-observer"
                 value={form.observer}
                 onChange={(e) => setForm({ ...form, observer: e.target.value })}
                 placeholder="이름"
@@ -240,10 +244,11 @@ function ObservationView() {
               />
             </div>
             <div>
-              <label className="label-caps flex items-center gap-1.5 mb-1.5">
+              <label htmlFor="obs-date" className="label-caps flex items-center gap-1.5 mb-1.5">
                 <CalendarDays className="w-3.5 h-3.5" /> 날짜
               </label>
               <input
+              id="obs-date"
                 type="date"
                 value={form.date}
                 onChange={(e) => setForm({ ...form, date: e.target.value })}
@@ -252,10 +257,11 @@ function ObservationView() {
             </div>
           </div>
           <div>
-            <label className="label-caps flex items-center gap-1.5 mb-1.5">
+            <label htmlFor="obs-subject" className="label-caps flex items-center gap-1.5 mb-1.5">
               <Bug className="w-3.5 h-3.5" /> 관찰 대상
             </label>
             <input
+              id="obs-subject"
               value={form.subject}
               onChange={(e) => setForm({ ...form, subject: e.target.value })}
               placeholder="곤충 이름"
@@ -263,10 +269,11 @@ function ObservationView() {
             />
           </div>
           <div>
-            <label className="label-caps flex items-center gap-1.5 mb-1.5">
+            <label htmlFor="obs-content" className="label-caps flex items-center gap-1.5 mb-1.5">
               <FileText className="w-3.5 h-3.5" /> 관찰 내용
             </label>
             <textarea
+              id="obs-content"
               value={form.content}
               onChange={(e) => setForm({ ...form, content: e.target.value })}
               placeholder="관찰한 내용을 상세히 기록하세요"
@@ -287,6 +294,7 @@ function ObservationView() {
         </h2>
         <div className="flex flex-wrap items-center gap-3">
           <select
+            aria-label="필터링할 관찰 대상"
             value={filterSubject}
             onChange={(e) => setFilterSubject(e.target.value)}
             className="bg-input rounded-md px-3 py-2 text-sm text-foreground shadow-input outline-none focus:ring-2 focus:ring-ring/20 transition-all min-w-[180px]"
@@ -459,8 +467,9 @@ function EncyclopediaView() {
       <div className="bg-card rounded-xl border border-border p-6 shadow-sm mb-6">
         <form onSubmit={(e) => { e.preventDefault(); searchInsects(1); }} className="flex gap-3 items-end">
           <div className="flex-1">
-            <label className="label-caps block mb-1.5">곤충 국명 또는 학명 입력</label>
+            <label htmlFor="insect-query" className="label-caps block mb-1.5">곤충 국명 또는 학명 입력</label>
             <input
+              id="insect-query"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="예: 장수풍뎅이, 호랑나비"

@@ -45,8 +45,9 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
             { label: "관찰 출처", key: "source" as const, placeholder: "현장, 논문 등" },
           ].map(({ label, key, placeholder }) => (
             <div key={key}>
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider block mb-1">{label}</label>
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider block mb-1" htmlFor={`reg-${key}`}>{label}</label>
               <input
+                id={`reg-${key}`}
                 value={form[key]}
                 onChange={(e) => setForm({ ...form, [key]: e.target.value })}
                 placeholder={placeholder}
@@ -55,8 +56,9 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
             </div>
           ))}
           <div>
-            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider block mb-1">상세 지식</label>
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider block mb-1" htmlFor="reg-description">상세 지식</label>
             <textarea
+              id="reg-description"
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               placeholder="관찰 내용을 자세히 기록하세요"
