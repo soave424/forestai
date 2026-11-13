@@ -114,12 +114,14 @@ const Index = () => {
       {tab === "observation" && (
         <div className="max-w-6xl mx-auto px-4 py-6">
           <h1 className="sr-only">관찰 기록장</h1>
-          <iframe
-            src="https://service-2406.ai.studio"
-            title="관찰 기록장"
-            className="w-full h-[calc(100vh-140px)] min-h-[600px] rounded-xl border border-border bg-card shadow-sm"
-            allow="camera; microphone; clipboard-write"
-          />
+          <div className="relative w-full h-[calc(100vh-140px)] min-h-[600px] overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+            <iframe
+              src="https://service-2406.ai.studio"
+              title="관찰 기록장"
+              className="absolute top-0 left-0 w-full border-0 h-[calc(100%_+_175px)] sm:h-[calc(100%_+_125px)]"
+              allow="camera; microphone; clipboard-write"
+            />
+          </div>
         </div>
       )}
       {tab === "encyclopedia" && <EncyclopediaView />}
